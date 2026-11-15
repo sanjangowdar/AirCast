@@ -41,7 +41,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  ZAxis,
   Area,
   AreaChart,
   Legend
@@ -62,10 +61,6 @@ const initialWeather = {
   rainfall: 0
 };
 
-
-// Sample historical data for the initial demo.
-// This is NOT live environmental data.
-
 const history = [
   { day: "Mon", actual: 82, predicted: 86 },
   { day: "Tue", actual: 96, predicted: 92 },
@@ -76,19 +71,17 @@ const history = [
   { day: "Sun", actual: 119, predicted: 122 }
 ];
 
-
 const initialScatterData = [
-  { temperature: 20, aqi: 64 },
-  { temperature: 22, aqi: 72 },
-  { temperature: 24, aqi: 79 },
-  { temperature: 26, aqi: 91 },
-  { temperature: 28, aqi: 108 },
-  { temperature: 30, aqi: 117 },
-  { temperature: 32, aqi: 136 },
-  { temperature: 34, aqi: 149 },
-  { temperature: 36, aqi: 158 }
+  { temperature: 20, pm25: 64 },
+  { temperature: 22, pm25: 72 },
+  { temperature: 24, pm25: 79 },
+  { temperature: 26, pm25: 91 },
+  { temperature: 28, pm25: 108 },
+  { temperature: 30, pm25: 117 },
+  { temperature: 32, pm25: 136 },
+  { temperature: 34, pm25: 149 },
+  { temperature: 36, pm25: 158 }
 ];
-
 
 const fadeUp = {
   hidden: { opacity: 0, y: 22 },
@@ -112,8 +105,10 @@ function GoldCursor() {
   const [active, setActive] = useState(false);
 
   useEffect(() => {
-    const move = e =>
-      setPos({ x: e.clientX, y: e.clientY });
+    const move = e => setPos({
+      x: e.clientX,
+      y: e.clientY
+    });
 
     const down = () => setActive(true);
     const up = () => setActive(false);
@@ -165,15 +160,15 @@ function GoldDust() {
 
   return (
     <div className="gold-dust" aria-hidden="true">
-      {dots.map((d, i) => (
+      {dots.map((dot, i) => (
         <i
           key={i}
           style={{
-            left: d.left,
-            top: d.top,
-            animationDelay: d.delay,
-            width: d.size,
-            height: d.size
+            left: dot.left,
+            top: dot.top,
+            animationDelay: dot.delay,
+            width: dot.size,
+            height: dot.size
           }}
         />
       ))}
@@ -260,7 +255,6 @@ function Login({ onLogin }) {
 
       <div className="auth-right">
         <div className="auth-card">
-
           <div className="mobile-brand">
             <Brand />
           </div>
@@ -276,7 +270,7 @@ function Login({ onLogin }) {
           <form
             onSubmit={e => {
               e.preventDefault();
-              onLogin(email || "guest@aircast.demo");
+              onLogin(email);
             }}
           >
             <label>Email address</label>
@@ -332,7 +326,6 @@ function Login({ onLogin }) {
             Demo sign-in only. Secure account authentication
             will be connected in a later backend step.
           </p>
-
         </div>
       </div>
     </div>
@@ -346,15 +339,8 @@ function Login({ onLogin }) {
 
 function Onboarding({ onComplete, email }) {
   const [city, setCity] = useState("Bengaluru");
-
-  const [role, setRole] = useState(
-    "Student / Researcher"
-  );
-
-  const [goal, setGoal] = useState(
-    "Explore air quality trends"
-  );
-
+  const [role, setRole] = useState("Student / Researcher");
+  const [goal, setGoal] = useState("Explore air quality trends");
   const [unit, setUnit] = useState("Celsius (°C)");
 
   return (
@@ -390,7 +376,6 @@ function Onboarding({ onComplete, email }) {
         </p>
 
         <div className="onboard-grid">
-
           <div className="field-block">
             <label>Primary city</label>
 
@@ -429,7 +414,7 @@ function Onboarding({ onComplete, email }) {
               >
                 <option>Explore air quality trends</option>
                 <option>
-                  Understand weather and AQI relationships
+                  Understand weather and PM2.5 relationships
                 </option>
                 <option>Compare prediction models</option>
                 <option>Study future pollution patterns</option>
@@ -454,7 +439,6 @@ function Onboarding({ onComplete, email }) {
               <ChevronDown size={16} />
             </div>
           </div>
-
         </div>
 
         <div className="onboard-bottom">
@@ -525,7 +509,6 @@ function ChartCard({ title, subtitle, children, tag }) {
       variants={fadeUp}
     >
       <div className="panel-heading">
-
         <div>
           <h3>{title}</h3>
           <p>{subtitle}</p>
@@ -534,7 +517,6 @@ function ChartCard({ title, subtitle, children, tag }) {
         {tag && (
           <span className="chart-tag">{tag}</span>
         )}
-
       </div>
 
       <div className="chart-wrap">
@@ -550,17 +532,11 @@ function ChartCard({ title, subtitle, children, tag }) {
 // ==========================================
 
 function Dashboard({ profile, onLogout }) {
-
   const [weather, setWeather] = useState(initialWeather);
-
   const [result, setResult] = useState(null);
-
   const [activeNav, setActiveNav] = useState("Overview");
-
   const [mobileNav, setMobileNav] = useState(false);
-
   const [forecastDays, setForecastDays] = useState("7 days");
-
   const [notice, setNotice] = useState("");
 
   const { scrollYProgress } = useScroll();
@@ -570,96 +546,65 @@ function Dashboard({ profile, onLogout }) {
     damping: 30
   });
 
-
-  // ========================================
-  // WEATHER INPUT FIELDS
-  // ========================================
-
   const fields = [
-    [
-      "temperature",
-      "Temperature",
-      "°C",
-      0,
-      50,
-      Thermometer
-    ],
-    [
-      "humidity",
-      "Relative humidity",
-      "%",
-      0,
-      100,
-      Droplets
-    ],
-    [
-      "windSpeed",
-      "Wind speed",
-      "km/h",
-      0,
-      100,
-      Wind
-    ],
-    [
-      "pressure",
-      "Atmospheric pressure",
-      "hPa",
-      900,
-      1100,
-      Gauge
-    ],
-    [
-      "rainfall",
-      "Rainfall",
-      "mm",
-      0,
-      200,
-      CloudRain
-    ]
+    ["temperature", "Temperature", "°C", 0, 50, Thermometer],
+    ["humidity", "Relative humidity", "%", 0, 100, Droplets],
+    ["windSpeed", "Wind speed", "km/h", 0, 100, Wind],
+    ["pressure", "Atmospheric pressure", "hPa", 900, 1100, Gauge],
+    ["rainfall", "Rainfall", "mm", 0, 200, CloudRain]
   ];
 
-
-  // ========================================
-  // UPDATE WEATHER INPUTS
-  // ========================================
+  const navItems = [
+    { name: "Overview", icon: LayoutDashboard },
+    { name: "Prediction", icon: Gauge },
+    { name: "Analytics", icon: BarChart3 },
+    { name: "Forecast", icon: Waves }
+  ];
 
   const update = (key, value) => {
-
     setWeather(prev => ({
       ...prev,
       [key]: value === "" ? "" : Number(value)
     }));
-
   };
 
 
   // ========================================
-  // AQI CATEGORY
-  // Indian AQI category bands
-  // ========================================
-
-  const getCategory = aqi => {
-
-    if (aqi <= 50) return "Good";
-
-    if (aqi <= 100) return "Satisfactory";
-
-    if (aqi <= 200) return "Moderate";
-
-    if (aqi <= 300) return "Poor";
-
-    if (aqi <= 400) return "Very Poor";
-
-    return "Severe";
-
-  };
-
-
-  // ========================================
-  // PREDICTION ENGINE
+  // PM2.5 DEMO PREDICTION
   // ========================================
 
   const predict = () => {
+    const limits = {
+      temperature: [0, 50],
+      humidity: [0, 100],
+      windSpeed: [0, 100],
+      pressure: [900, 1100],
+      rainfall: [0, 200]
+    };
+
+    for (const key of Object.keys(limits)) {
+      const value = weather[key];
+      const [min, max] = limits[key];
+
+      if (
+        value === "" ||
+        !Number.isFinite(value) ||
+        value < min ||
+        value > max
+      ) {
+        setNotice(`Please enter a valid ${key} value.`);
+        setTimeout(() => setNotice(""), 4000);
+        return;
+      }
+    }
+
+    /*
+      IMPORTANT:
+      This is an illustrative frontend formula.
+      It is NOT a trained PM2.5 regression model.
+      Replace it with your trained model/API output
+      when your backend is ready.
+    */
 
     const {
       temperature,
@@ -669,125 +614,37 @@ function Dashboard({ profile, onLogout }) {
       rainfall
     } = weather;
 
+    const rawPM25 =
+      18 +
+      Math.max(0, (temperature - 15) * 0.9) +
+      Math.max(0, (humidity - 30) * 0.22) +
+      Math.max(0, (15 - windSpeed) * 0.8) +
+      Math.max(0, (1013 - pressure) * 0.18) -
+      Math.min(rainfall * 0.7, 14);
 
-    // Validate inputs
-
-    const limits = {
-      temperature: [0, 50],
-      humidity: [0, 100],
-      windSpeed: [0, 100],
-      pressure: [900, 1100],
-      rainfall: [0, 200]
-    };
-
-
-    for (const key of Object.keys(limits)) {
-
-      const value = weather[key];
-
-      const [min, max] = limits[key];
-
-      if (
-        value === "" ||
-        !Number.isFinite(value) ||
-        value < min ||
-        value > max
-      ) {
-
-        setNotice(
-          `Please enter a valid ${key} value.`
-        );
-
-        setTimeout(() => setNotice(""), 4000);
-
-        return;
-      }
-
-    }
-
-
-    // Illustrative scoring components
-
-    const temperatureEffect = Math.max(
+    const pm25 = Math.max(
       0,
-      (temperature - 15) * 2.2
+      Math.min(300, Number(rawPM25.toFixed(1)))
     );
-
-    const humidityEffect = Math.max(
-      0,
-      (humidity - 30) * 0.65
-    );
-
-    const windEffect = Math.max(
-      0,
-      (20 - windSpeed) * 1.8
-    );
-
-    const pressureEffect = Math.max(
-      0,
-      (1013 - pressure) * 0.5
-    );
-
-    const rainfallEffect = Math.min(
-      rainfall * 1.5,
-      30
-    );
-
-
-    // Illustrative demo score.
-    // This is NOT a validated AQI prediction model.
-
-    const rawAQI =
-      35 +
-      temperatureEffect +
-      humidityEffect +
-      windEffect +
-      pressureEffect -
-      rainfallEffect;
-
-
-    const aqi = Math.min(
-      500,
-      Math.max(0, Math.round(rawAQI))
-    );
-
-
-    const category = getCategory(aqi);
-
-
-    // Store the current prediction and inputs
 
     setResult({
-
-      aqi,
-
-      category,
-
+      pm25,
+      category: "Demo estimate",
       temperature,
-
       humidity,
-
       windSpeed,
-
       pressure,
-
       rainfall,
-
       generatedAt: new Date().toLocaleString()
-
     });
-
 
     setActiveNav("Prediction");
 
-
     setNotice(
-      "New prediction generated successfully."
+      "Illustrative PM2.5 demo estimate generated — not a trained-model prediction."
     );
 
-
     setTimeout(() => setNotice(""), 5000);
-
   };
 
 
@@ -796,86 +653,54 @@ function Dashboard({ profile, onLogout }) {
   // ========================================
 
   const chartHistory = useMemo(() => {
-
     if (!result) return history;
 
-    const base = result.aqi;
-
-    const offsets = [
-      -24,
-      -16,
-      -10,
-      -5,
-      8,
-      14,
-      0
-    ];
+    const offsets = [-24, -16, -10, -5, 8, 14, 0];
 
     return offsets.map((offset, index) => {
-
       const value = Math.max(
         0,
-        Math.min(500, base + offset)
+        Math.min(500, result.pm25 + offset)
       );
 
       return {
-
-        day: [
-          "Mon",
-          "Tue",
-          "Wed",
-          "Thu",
-          "Fri",
-          "Sat",
-          "Sun"
-        ][index],
-
+        day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][index],
         actual: value,
-
         predicted: Math.max(
           0,
-          Math.min(500, value + (index % 2 === 0 ? 3 : -3))
+          value + (index % 2 === 0 ? 3 : -3)
         )
-
       };
-
     });
-
   }, [result]);
 
 
   const dynamicScatterData = useMemo(() => {
-
     if (!result) return initialScatterData;
 
     const offsets = [-8, -6, -4, -2, 0, 2, 4, 6, 8];
 
     return offsets.map((offset, index) => ({
-
       temperature: Math.max(
         0,
         Math.min(50, result.temperature + offset)
       ),
-
-      aqi: Math.max(
+      pm25: Math.max(
         0,
         Math.min(
           500,
-          result.aqi + offset * 3 + (index % 2 === 0 ? 5 : -5)
+          result.pm25 + offset * 3 + (index % 2 === 0 ? 5 : -5)
         )
       )
-
     }));
-
   }, [result]);
 
 
   // ========================================
-  // DYNAMIC FORECAST SCENARIO
+  // FORECAST SCENARIO
   // ========================================
 
   const forecastData = useMemo(() => {
-
     const numberOfDays =
       forecastDays === "7 days"
         ? 7
@@ -883,108 +708,56 @@ function Dashboard({ profile, onLogout }) {
         ? 14
         : 30;
 
-    const base = result?.aqi ?? 124;
+    const base = result?.pm25 ?? 124;
 
     return Array.from(
       { length: numberOfDays + 1 },
       (_, index) => {
-
         const variation =
           Math.sin(index * 0.8) * 12 +
           Math.cos(index * 0.35) * 7;
 
-        const predicted = Math.max(
-          0,
-          Math.min(
-            500,
-            Math.round(base + variation)
-          )
-        );
-
         return {
-
-          day:
-            index === 0
-              ? "Today"
-              : `Day ${index}`,
-
-          predicted
-
+          day: index === 0 ? "Today" : `Day ${index}`,
+          predicted: Math.max(
+            0,
+            Math.min(500, Math.round(base + variation))
+          )
         };
-
       }
     );
-
   }, [forecastDays, result]);
 
 
   // ========================================
-  // OVERVIEW VALUES
-  // ========================================
-
-  const displayWeather = result || weather;
-
-  const displayAQI = result?.aqi ?? "—";
-
-  const displayCategory = result?.category ?? "Awaiting";
-
-
-  // ========================================
-  // EXPORT REPORT
+  // REPORT DOWNLOAD
   // ========================================
 
   const exportReport = () => {
-
     if (!result) return;
 
     const lines = [
-
-      "AIRCAST PREDICTION REPORT",
-
+      "AIRCAST PM2.5 PREDICTION REPORT",
       "================================",
-
       `City: ${profile.city}`,
-
       `Generated: ${result.generatedAt}`,
-
       "",
-
       "WEATHER INPUTS",
-
       `Temperature: ${result.temperature} °C`,
-
       `Humidity: ${result.humidity} %`,
-
       `Wind speed: ${result.windSpeed} km/h`,
-
       `Atmospheric pressure: ${result.pressure} hPa`,
-
       `Rainfall: ${result.rainfall} mm`,
-
       "",
-
-      "PREDICTION RESULT",
-
-      `AQI-like demo score: ${result.aqi}`,
-
+      "RESULT",
+      `PM2.5 demo score: ${result.pm25}`,
       `Category: ${result.category}`,
-
       "",
-
-      "IMPORTANT DISCLAIMER",
-
-      "This is an illustrative weather-based score.",
-
-      "It is not an actual measured AQI value.",
-
-      "A scientifically validated AQI prediction requires",
-
-      "historical pollution measurements and a trained model.",
-
-      "PM2.5 cannot be determined from these weather inputs alone."
-
+      "DISCLAIMER",
+      "This is an illustrative frontend demo score.",
+      "It is not a measured PM2.5 concentration.",
+      "A scientifically validated PM2.5 prediction requires historical pollution measurements and a trained model."
     ];
-
 
     const blob = new Blob(
       [lines.join("\n")],
@@ -992,47 +765,14 @@ function Dashboard({ profile, onLogout }) {
     );
 
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
 
     a.href = url;
-
-    a.download = "aircast-prediction-report.txt";
-
+    a.download = "aircast-pm25-report.txt";
     a.click();
 
     URL.revokeObjectURL(url);
-
   };
-
-
-  // ========================================
-  // NAVIGATION
-  // ========================================
-
-  const navItems = [
-
-    {
-      name: "Overview",
-      icon: LayoutDashboard
-    },
-
-    {
-      name: "Prediction",
-      icon: Gauge
-    },
-
-    {
-      name: "Analytics",
-      icon: BarChart3
-    },
-
-    {
-      name: "Forecast",
-      icon: Waves
-    }
-
-  ];
 
 
   // ========================================
@@ -1040,28 +780,26 @@ function Dashboard({ profile, onLogout }) {
   // ========================================
 
   const sectionTitle = {
-
     Overview: [
       "Your atmosphere, at a glance.",
       "Explore the latest weather inputs and air-quality insights."
     ],
-
     Prediction: [
       "A prediction, shaped by weather.",
       "Enter local weather conditions to generate a demo estimate."
     ],
-
     Analytics: [
       "Read between the signals.",
-      "Explore illustrative relationships between weather and AQI scores."
+      "Explore illustrative relationships between weather and PM2.5 scores."
     ],
-
     Forecast: [
       "Look a little further ahead.",
       "Explore a scenario based on your latest demo prediction."
     ]
-
   }[activeNav];
+
+  const displayWeather = result || weather;
+  const displayPM25 = result?.pm25 ?? "—";
 
 
   // ========================================
@@ -1069,7 +807,6 @@ function Dashboard({ profile, onLogout }) {
   // ========================================
 
   return (
-
     <div className="app-shell">
 
       <motion.div
@@ -1082,11 +819,7 @@ function Dashboard({ profile, onLogout }) {
 
       {/* SIDEBAR */}
 
-      <aside
-        className={`sidebar ${
-          mobileNav ? "sidebar-open" : ""
-        }`}
-      >
+      <aside className={`sidebar ${mobileNav ? "sidebar-open" : ""}`}>
 
         <div className="sidebar-brand">
           <Brand />
@@ -1097,34 +830,24 @@ function Dashboard({ profile, onLogout }) {
         </div>
 
         <div className="nav-list">
-
           {navItems.map(item => (
-
             <button
               key={item.name}
-              className={`nav-item ${
-                activeNav === item.name ? "active" : ""
-              }`}
+              className={`nav-item ${activeNav === item.name ? "active" : ""}`}
               onClick={() => {
                 setActiveNav(item.name);
                 setMobileNav(false);
               }}
             >
-
               <item.icon size={17} />
-
               {item.name}
 
               {activeNav === item.name && (
                 <span className="nav-active-dot" />
               )}
-
             </button>
-
           ))}
-
         </div>
-
 
         <div className="sidebar-bottom">
 
@@ -1134,11 +857,8 @@ function Dashboard({ profile, onLogout }) {
           </div>
 
           <div className="profile-mini">
-
             <div className="avatar">
-              {(profile.email || "A")
-                .slice(0, 1)
-                .toUpperCase()}
+              {(profile.email || "A").slice(0, 1).toUpperCase()}
             </div>
 
             <div>
@@ -1148,15 +868,15 @@ function Dashboard({ profile, onLogout }) {
 
               <small>{profile.city}</small>
             </div>
-
-            <button
-              title="Sign out"
-              onClick={onLogout}
-            >
-              <LogOut size={16} />
-            </button>
-
           </div>
+
+          <button
+            className="logout-button"
+            onClick={onLogout}
+          >
+            <LogOut size={16} />
+            Sign out
+          </button>
 
         </div>
 
@@ -1167,89 +887,67 @@ function Dashboard({ profile, onLogout }) {
 
       <main className="main-content">
 
-
-        {/* TOP BAR */}
-
         <header className="topbar">
 
           <button
             className="mobile-menu"
             onClick={() => setMobileNav(!mobileNav)}
           >
-
             {mobileNav ? <X /> : <Menu />}
-
           </button>
 
-          <div className="breadcrumb">
-
-            AIRCAST <span>/</span>
-
-            <b>{activeNav.toUpperCase()}</b>
-
+          <div className="topbar-location">
+            <Compass size={15} />
+            {profile.city}
           </div>
 
           <div className="topbar-right">
-
-            <span className="live-pill">
-              <i />
-              DEMO DATA
+            <span className="topbar-status">
+              <span className="status-dot" />
+              DEMO LIVE
             </span>
 
             <button
-              className="icon-button"
+              className="notification-button"
               title="Notifications"
             >
               <Bell size={17} />
             </button>
 
-            <div className="top-avatar">
-              {(profile.email || "A")
-                .slice(0, 1)
-                .toUpperCase()}
+            <div className="avatar small-avatar">
+              {(profile.email || "A").slice(0, 1).toUpperCase()}
             </div>
-
           </div>
 
         </header>
 
 
-        <div className="page-content">
+        <div className="dashboard-content">
 
-
-          {/* PAGE INTRO */}
+          {/* PAGE HEADING */}
 
           <motion.div
-            className="page-intro"
+            className="page-heading"
+            key={activeNav}
             initial="hidden"
             animate="show"
             variants={fadeUp}
           >
-
             <div>
-
               <div className="eyebrow">
                 <span className="eyebrow-line" />
-                AIR QUALITY INTELLIGENCE
+                AIRCAST INTELLIGENCE
               </div>
 
               <h1>{sectionTitle[0]}</h1>
 
               <p>{sectionTitle[1]}</p>
-
             </div>
 
-            <div className="intro-date">
-
-              <span>YOUR LOCATION</span>
-
-              <strong>
-                <Compass size={15} />
-                {profile.city || "Your city"}
-              </strong>
-
+            <div className="heading-date">
+              <Compass size={15} />
+              {profile.city}
             </div>
-
           </motion.div>
 
 
@@ -1257,283 +955,207 @@ function Dashboard({ profile, onLogout }) {
               OVERVIEW
           =================================== */}
 
-          {activeNav === "Overview" && <>
-
-
-            <motion.div
-              className="hero-banner"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-            >
-
-              <div className="hero-orb" />
-
-              <div className="hero-content">
-
-                <div className="eyebrow gold-eyebrow">
-                  AIRCAST INSIGHT
-                  <span className="insight-dot" />
-                </div>
-
-                <h2>
-                  Clarity begins
-                  <br />
-                  with <em>observation.</em>
-                </h2>
-
-                <p>
-                  Explore how changing weather conditions
-                  may influence the air around you.
-                </p>
-
-                <button
-                  className="gold-button"
-                  onClick={() => setActiveNav("Prediction")}
-                >
-                  Make a prediction
-                  <ArrowRight size={16} />
-                </button>
-
-              </div>
-
-
-              <div className="hero-side">
-
-                <div className="hero-side-label">
-                  AIR QUALITY INDEX
-                  <span>DEMO SCORE</span>
-                </div>
-
-                <div className="hero-aqi">
-                  {displayAQI}
-                </div>
-
-                <div className="aqi-status">
-                  <span />
-                  {displayCategory.toUpperCase()}
-                </div>
-
-                <div className="hero-side-foot">
-                  {result
-                    ? "Based on your latest inputs"
-                    : "Run your first prediction"}
-                </div>
-
-              </div>
-
-            </motion.div>
-
-
-            {/* DYNAMIC METRICS */}
+          {activeNav === "Overview" && (
 
             <motion.div
-              className="metric-grid"
+              className="overview-section"
               initial="hidden"
               animate="show"
               variants={{
                 show: {
                   transition: {
-                    staggerChildren: 0.09
+                    staggerChildren: 0.08
                   }
                 }
               }}
             >
 
-              <Metric
-                icon={Thermometer}
-                label="TEMPERATURE"
-                value={displayWeather.temperature}
-                unit="°C"
-                note="Latest entered temperature"
-              />
+              <div className="metric-grid">
 
-              <Metric
-                icon={Droplets}
-                label="HUMIDITY"
-                value={displayWeather.humidity}
-                unit="%"
-                note="Relative humidity"
-              />
+                <Metric
+                  icon={Thermometer}
+                  label="TEMPERATURE"
+                  value={displayWeather.temperature}
+                  unit="°C"
+                  note="Current input"
+                />
 
-              <Metric
-                icon={Wind}
-                label="WIND SPEED"
-                value={displayWeather.windSpeed}
-                unit="km/h"
-                note="Wind movement"
-              />
+                <Metric
+                  icon={Droplets}
+                  label="HUMIDITY"
+                  value={displayWeather.humidity}
+                  unit="%"
+                  note="Relative humidity"
+                />
 
-              <Metric
-                icon={Activity}
-                label="PREDICTED AQI"
-                value={displayAQI}
-                unit=""
-                note={result
-                  ? result.category
-                  : "Awaiting prediction"}
-              />
+                <Metric
+                  icon={Wind}
+                  label="WIND SPEED"
+                  value={displayWeather.windSpeed}
+                  unit="km/h"
+                  note="Wind observation"
+                />
+
+                <Metric
+                  icon={Activity}
+                  label="PM2.5 DEMO SCORE"
+                  value={displayPM25}
+                  unit=""
+                  note={
+                    result
+                      ? "Latest demo estimate"
+                      : "Awaiting prediction"
+                  }
+                />
+
+              </div>
+
+
+              <div className="overview-grid">
+
+                <ChartCard
+                  title="PM2.5 trend overview"
+                  subtitle="Illustrative values, not live measurements"
+                  tag="WEEKLY"
+                >
+
+                  <ResponsiveContainer width="100%" height="100%">
+
+                    <AreaChart data={chartHistory}>
+
+                      <defs>
+                        <linearGradient
+                          id="pm25Gradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor={GOLD}
+                            stopOpacity={0.3}
+                          />
+
+                          <stop
+                            offset="100%"
+                            stopColor={GOLD}
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+
+                      <CartesianGrid
+                        stroke="#ffffff0d"
+                        vertical={false}
+                      />
+
+                      <XAxis
+                        dataKey="day"
+                        stroke="#77736a"
+                        tickLine={false}
+                        axisLine={false}
+                      />
+
+                      <YAxis
+                        stroke="#77736a"
+                        tickLine={false}
+                        axisLine={false}
+                      />
+
+                      <Tooltip
+                        contentStyle={{
+                          background: "#171612",
+                          border: "1px solid #5a492b",
+                          borderRadius: 10
+                        }}
+                      />
+
+                      <Area
+                        type="monotone"
+                        dataKey="actual"
+                        name="Illustrative PM2.5"
+                        stroke={GOLD}
+                        strokeWidth={2.5}
+                        fill="url(#pm25Gradient)"
+                      />
+
+                    </AreaChart>
+
+                  </ResponsiveContainer>
+
+                </ChartCard>
+
+
+                <div className="panel overview-side-panel">
+
+                  <div className="panel-heading">
+                    <div>
+                      <h3>Weather snapshot</h3>
+                      <p>Latest entered conditions</p>
+                    </div>
+
+                    <CloudRain
+                      size={19}
+                      className="gold-text"
+                    />
+                  </div>
+
+                  <div className="snapshot-list">
+
+                    <div>
+                      <span>Temperature</span>
+                      <strong>{displayWeather.temperature} °C</strong>
+                    </div>
+
+                    <div>
+                      <span>Humidity</span>
+                      <strong>{displayWeather.humidity}%</strong>
+                    </div>
+
+                    <div>
+                      <span>Wind speed</span>
+                      <strong>{displayWeather.windSpeed} km/h</strong>
+                    </div>
+
+                    <div>
+                      <span>Pressure</span>
+                      <strong>{displayWeather.pressure} hPa</strong>
+                    </div>
+
+                    <div>
+                      <span>Rainfall</span>
+                      <strong>{displayWeather.rainfall} mm</strong>
+                    </div>
+
+                  </div>
+
+                  <button
+                    className="gold-button full"
+                    onClick={() => setActiveNav("Prediction")}
+                  >
+                    New prediction
+                    <ArrowRight size={16} />
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              <div className="bottom-note">
+                <Sparkles size={16} />
+
+                <span>
+                  {result
+                    ? "Dashboard updated using your latest demo estimate. Graph points are illustrative."
+                    : "Enter weather values in Prediction to generate your first PM2.5 demo estimate."}
+                </span>
+              </div>
 
             </motion.div>
 
-
-            {/* DYNAMIC GRAPHS */}
-
-            <div className="two-col">
-
-              <ChartCard
-                title="Air quality movement"
-                subtitle={
-                  result
-                    ? "Illustrative values around your latest prediction"
-                    : "Sample AQI trend across the past week"
-                }
-                tag="7 DAY VIEW"
-              >
-
-                <ResponsiveContainer width="100%" height="100%">
-
-                  <AreaChart data={chartHistory}>
-
-                    <defs>
-
-                      <linearGradient
-                        id="goldFill"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-
-                        <stop
-                          offset="0%"
-                          stopColor={GOLD}
-                          stopOpacity={0.28}
-                        />
-
-                        <stop
-                          offset="100%"
-                          stopColor={GOLD}
-                          stopOpacity={0}
-                        />
-
-                      </linearGradient>
-
-                    </defs>
-
-                    <CartesianGrid
-                      stroke="#ffffff0d"
-                      vertical={false}
-                    />
-
-                    <XAxis
-                      dataKey="day"
-                      stroke="#77736a"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-
-                    <YAxis
-                      stroke="#77736a"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-
-                    <Tooltip
-                      contentStyle={{
-                        background: "#171612",
-                        border: "1px solid #5a492b",
-                        borderRadius: 10,
-                        color: "#f5eee0"
-                      }}
-                    />
-
-                    <Area
-                      type="monotone"
-                      dataKey="actual"
-                      name="Illustrative AQI"
-                      stroke={GOLD}
-                      strokeWidth={2.5}
-                      fill="url(#goldFill)"
-                    />
-
-                  </AreaChart>
-
-                </ResponsiveContainer>
-
-              </ChartCard>
-
-
-              <ChartCard
-                title="Temperature & AQI"
-                subtitle="Illustrative relationship based on demo values"
-                tag="CORRELATION"
-              >
-
-                <ResponsiveContainer width="100%" height="100%">
-
-                  <ScatterChart>
-
-                    <CartesianGrid stroke="#ffffff0d" />
-
-                    <XAxis
-                      type="number"
-                      dataKey="temperature"
-                      name="Temperature"
-                      unit="°C"
-                      stroke="#77736a"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-
-                    <YAxis
-                      type="number"
-                      dataKey="aqi"
-                      name="AQI"
-                      stroke="#77736a"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-
-                    <ZAxis range={[55, 55]} />
-
-                    <Tooltip
-                      cursor={{
-                        strokeDasharray: "3 3"
-                      }}
-                      contentStyle={{
-                        background: "#171612",
-                        border: "1px solid #5a492b",
-                        borderRadius: 10
-                      }}
-                    />
-
-                    <Scatter
-                      data={dynamicScatterData}
-                      fill={GOLD}
-                    />
-
-                  </ScatterChart>
-
-                </ResponsiveContainer>
-
-              </ChartCard>
-
-            </div>
-
-
-            <div className="bottom-note">
-              <Sparkles size={16} />
-
-              <span>
-                {result
-                  ? "Dashboard updated using your latest prediction. Graph points are illustrative, not measured historical observations."
-                  : "Enter weather values in Prediction to update your dashboard."}
-              </span>
-
-            </div>
-
-          </>}
+          )}
 
 
           {/* ===================================
@@ -1543,9 +1165,6 @@ function Dashboard({ profile, onLogout }) {
           {activeNav === "Prediction" && (
 
             <div className="prediction-layout">
-
-
-              {/* INPUT PANEL */}
 
               <section className="panel input-panel">
 
@@ -1578,9 +1197,7 @@ function Dashboard({ profile, onLogout }) {
 
                         <label>
                           <Icon size={15} />
-
                           {label}
-
                           <span>({unit})</span>
                         </label>
 
@@ -1597,7 +1214,6 @@ function Dashboard({ profile, onLogout }) {
 
                         <div className="field-range">
                           <span>{min} {unit}</span>
-
                           <span>{max} {unit}</span>
                         </div>
 
@@ -1614,9 +1230,7 @@ function Dashboard({ profile, onLogout }) {
                   onClick={predict}
                 >
                   <Zap size={16} />
-
-                  Predict air quality
-
+                  Predict PM2.5
                   <ArrowRight size={16} />
                 </button>
 
@@ -1640,7 +1254,7 @@ function Dashboard({ profile, onLogout }) {
                     <h3>Prediction result</h3>
 
                     <p>
-                      Your estimated air-quality output.
+                      Your estimated PM2.5 demo output.
                     </p>
                   </div>
 
@@ -1655,7 +1269,7 @@ function Dashboard({ profile, onLogout }) {
                 {result ? (
 
                   <motion.div
-                    key={result.aqi}
+                    key={result.pm25}
                     initial={{
                       opacity: 0,
                       scale: 0.94
@@ -1668,36 +1282,24 @@ function Dashboard({ profile, onLogout }) {
                   >
 
                     <div className="result-number">
-                      {result.aqi}
-
-                      <small>DEMO AQI SCORE</small>
+                      {result.pm25}
+                      <small>DEMO PM2.5 SCORE</small>
                     </div>
 
-
-                    <div
-                      className={`result-category ${
-                        result.category
-                          .toLowerCase()
-                          .replace(" ", "-")
-                      }`}
-                    >
+                    <div className="result-category">
                       {result.category}
                     </div>
 
-
                     <div className="result-meter">
-
                       <span
                         style={{
                           width: `${Math.min(
-                            result.aqi / 500 * 100,
+                            result.pm25 / 500 * 100,
                             100
                           )}%`
                         }}
                       />
-
                     </div>
-
 
                     <div className="prediction-details">
 
@@ -1728,22 +1330,22 @@ function Dashboard({ profile, onLogout }) {
 
                     </div>
 
-
-                    <p>
-                      This is an illustrative score calculated
-                      from the weather values you entered.
-                      It is not a measured AQI value.
+                    <p className="result-timestamp">
+                      Generated: {result.generatedAt}
                     </p>
-
 
                     <button
                       className="outline-button full"
                       onClick={exportReport}
                     >
                       <Download size={16} />
-
-                      Download prediction report
+                      Download report
                     </button>
+
+                    <p className="result-disclaimer">
+                      This is an illustrative demo score, not
+                      an actual measured PM2.5 concentration.
+                    </p>
 
                   </motion.div>
 
@@ -1751,15 +1353,15 @@ function Dashboard({ profile, onLogout }) {
 
                   <div className="empty-result">
 
-                    <div className="empty-orbit">
-                      <Activity size={30} />
+                    <div className="empty-icon">
+                      <Waves size={30} />
                     </div>
 
                     <h4>Awaiting your inputs</h4>
 
                     <p>
-                      Enter your weather conditions and run
-                      a prediction to see the result here.
+                      Enter your weather conditions and click
+                      predict to generate your demo PM2.5 score.
                     </p>
 
                   </div>
@@ -1777,13 +1379,12 @@ function Dashboard({ profile, onLogout }) {
               ANALYTICS
           =================================== */}
 
-          {activeNav === "Analytics" && <>
+          {activeNav === "Analytics" && (
 
             <div className="analytics-grid">
 
-
               <ChartCard
-                title="Temperature vs AQI"
+                title="Temperature vs PM2.5"
                 subtitle="Illustrative relationship using demo values"
                 tag="RELATIONSHIP"
               >
@@ -1806,8 +1407,8 @@ function Dashboard({ profile, onLogout }) {
 
                     <YAxis
                       type="number"
-                      dataKey="aqi"
-                      name="AQI"
+                      dataKey="pm25"
+                      name="PM2.5"
                       stroke="#77736a"
                       tickLine={false}
                       axisLine={false}
@@ -1834,9 +1435,9 @@ function Dashboard({ profile, onLogout }) {
 
 
               <ChartCard
-                title="Observed vs model estimate"
-                subtitle="Illustrative values, not actual model evaluation"
-                tag="MODEL CHECK"
+                title="Illustrative PM2.5 trend"
+                subtitle="Comparison of sample values"
+                tag="TREND"
               >
 
                 <ResponsiveContainer width="100%" height="100%">
@@ -1864,7 +1465,8 @@ function Dashboard({ profile, onLogout }) {
                     <Tooltip
                       contentStyle={{
                         background: "#171612",
-                        border: "1px solid #5a492b"
+                        border: "1px solid #5a492b",
+                        borderRadius: 10
                       }}
                     />
 
@@ -1875,14 +1477,14 @@ function Dashboard({ profile, onLogout }) {
                       dataKey="actual"
                       name="Illustrative value"
                       stroke={GOLD}
-                      strokeWidth={2.3}
+                      strokeWidth={2.5}
                       dot={false}
                     />
 
                     <Line
                       type="monotone"
                       dataKey="predicted"
-                      name="Illustrative comparison"
+                      name="Demo comparison"
                       stroke="#8b9a9a"
                       strokeWidth={2}
                       strokeDasharray="5 5"
@@ -1895,175 +1497,194 @@ function Dashboard({ profile, onLogout }) {
 
               </ChartCard>
 
-            </div>
 
+              <div className="panel analysis-copy">
 
-            <div className="panel analysis-copy">
+                <div className="eyebrow">
+                  STATISTICAL METHODS
+                </div>
 
-              <div className="eyebrow">
-                STATISTICAL METHODS
+                <h3>
+                  From raw observations to useful insight.
+                </h3>
+
+                <div className="method-grid">
+
+                  <div>
+                    <b>01 / CORRELATION</b>
+
+                    <p>
+                      Measure the strength and direction of
+                      relationships between weather variables
+                      and PM2.5.
+                    </p>
+                  </div>
+
+                  <div>
+                    <b>02 / MULTIPLE REGRESSION</b>
+
+                    <p>
+                      Estimate PM2.5 using several meteorological
+                      variables together.
+                    </p>
+                  </div>
+
+                  <div>
+                    <b>03 / ERROR ANALYSIS</b>
+
+                    <p>
+                      Evaluate a trained model with MAE,
+                      RMSE and R² on held-out observations.
+                    </p>
+                  </div>
+
+                </div>
+
               </div>
 
-              <h3>
-                From raw observations to useful insight.
-              </h3>
-
-              <div className="method-grid">
-
-                <div>
-                  <b>01 / CORRELATION</b>
-
-                  <p>
-                    Measure the strength and direction of
-                    relationships between weather variables
-                    and AQI.
-                  </p>
-                </div>
-
-                <div>
-                  <b>02 / MULTIPLE REGRESSION</b>
-
-                  <p>
-                    Estimate AQI using several meteorological
-                    variables together.
-                  </p>
-                </div>
-
-                <div>
-                  <b>03 / ERROR ANALYSIS</b>
-
-                  <p>
-                    Evaluate a trained model with MAE,
-                    RMSE and R² on held-out observations.
-                  </p>
-                </div>
-
-              </div>
-
             </div>
 
-          </>}
+          )}
 
 
           {/* ===================================
               FORECAST
           =================================== */}
 
-          {activeNav === "Forecast" && <>
+          {activeNav === "Forecast" && (
 
-            <div className="panel forecast-panel">
+            <div className="forecast-section">
 
-              <div className="panel-heading">
+              <div className="panel forecast-panel">
 
-                <div>
-                  <h3>Air quality scenario</h3>
+                <div className="panel-heading">
 
-                  <p>
-                    Illustrative projection based on the latest
-                    demo score, not a validated forecast.
-                  </p>
+                  <div>
+                    <h3>PM2.5 forecast scenario</h3>
+
+                    <p>
+                      Explore an illustrative future trend.
+                    </p>
+                  </div>
+
+                  <div className="select-wrap compact-select">
+
+                    <select
+                      value={forecastDays}
+                      onChange={e =>
+                        setForecastDays(e.target.value)
+                      }
+                    >
+                      <option>7 days</option>
+                      <option>14 days</option>
+                      <option>30 days</option>
+                    </select>
+
+                    <ChevronDown size={15} />
+
+                  </div>
+
                 </div>
 
 
-                <div className="select-wrap compact-select">
+                <div className="forecast-chart">
 
-                  <select
-                    value={forecastDays}
-                    onChange={e =>
-                      setForecastDays(e.target.value)
-                    }
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
                   >
 
-                    <option>7 days</option>
-                    <option>14 days</option>
-                    <option>30 days</option>
+                    <AreaChart data={forecastData}>
 
-                  </select>
+                      <defs>
 
-                  <ChevronDown size={15} />
+                        <linearGradient
+                          id="forecastFill"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
 
+                          <stop
+                            offset="0%"
+                            stopColor={GOLD}
+                            stopOpacity={0.3}
+                          />
+
+                          <stop
+                            offset="100%"
+                            stopColor={GOLD}
+                            stopOpacity={0}
+                          />
+
+                        </linearGradient>
+
+                      </defs>
+
+                      <CartesianGrid
+                        stroke="#ffffff0d"
+                        vertical={false}
+                      />
+
+                      <XAxis
+                        dataKey="day"
+                        stroke="#77736a"
+                        tickLine={false}
+                        axisLine={false}
+                      />
+
+                      <YAxis
+                        stroke="#77736a"
+                        tickLine={false}
+                        axisLine={false}
+                      />
+
+                      <Tooltip
+                        contentStyle={{
+                          background: "#171612",
+                          border: "1px solid #5a492b",
+                          borderRadius: 10
+                        }}
+                      />
+
+                      <Area
+                        type="monotone"
+                        dataKey="predicted"
+                        name="Illustrative PM2.5"
+                        stroke={GOLD}
+                        strokeWidth={2.5}
+                        fill="url(#forecastFill)"
+                      />
+
+                    </AreaChart>
+
+                  </ResponsiveContainer>
+
+                </div>
+
+
+                <div className="forecast-legend">
+                  <span className="legend-dot" />
+                  Illustrative scenario values
                 </div>
 
               </div>
 
 
-              <div className="forecast-chart">
-
-                <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                >
-
-                  <LineChart data={forecastData}>
-
-                    <CartesianGrid
-                      stroke="#ffffff0d"
-                      vertical={false}
-                    />
-
-                    <XAxis
-                      dataKey="day"
-                      stroke="#77736a"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-
-                    <YAxis
-                      stroke="#77736a"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-
-                    <Tooltip
-                      contentStyle={{
-                        background: "#171612",
-                        border: "1px solid #5a492b",
-                        borderRadius: 10
-                      }}
-                    />
-
-                    <Line
-                      type="monotone"
-                      dataKey="predicted"
-                      name="Illustrative AQI scenario"
-                      stroke={GOLD}
-                      strokeWidth={2.5}
-                      strokeDasharray="6 4"
-                      dot={{ r: 3 }}
-                    />
-
-                  </LineChart>
-
-                </ResponsiveContainer>
-
-              </div>
-
-
-              <div className="forecast-legend">
+              <div className="bottom-note">
+                <Waves size={16} />
 
                 <span>
-                  <i className="legend-forecast" />
-                  Illustrative scenario
+                  A genuine future PM2.5 forecast requires
+                  historical pollution measurements and
+                  a trained time-series model.
                 </span>
-
               </div>
 
             </div>
 
-
-            <div className="bottom-note">
-
-              <Waves size={16} />
-
-              <span>
-                A genuine future AQI forecast requires
-                historical pollution measurements and
-                a trained time-series model.
-              </span>
-
-            </div>
-
-          </>}
+          )}
 
 
           {/* FOOTER */}
@@ -2081,7 +1702,6 @@ function Dashboard({ profile, onLogout }) {
             </span>
 
           </footer>
-
 
         </div>
 
@@ -2111,7 +1731,6 @@ function Dashboard({ profile, onLogout }) {
           >
 
             <Check size={16} />
-
             {notice}
 
           </motion.div>
@@ -2121,9 +1740,7 @@ function Dashboard({ profile, onLogout }) {
       </AnimatePresence>
 
     </div>
-
   );
-
 }
 
 
@@ -2132,67 +1749,44 @@ function Dashboard({ profile, onLogout }) {
 // ==========================================
 
 export default function App() {
-
   const [email, setEmail] = useState(
     () => localStorage.getItem("aircast-email") || ""
   );
 
-
   const [profile, setProfile] = useState(() => {
-
     try {
-
       return JSON.parse(
         localStorage.getItem("aircast-profile") || "null"
       );
-
     } catch {
-
       return null;
-
     }
-
   });
 
-
   const login = value => {
-
     setEmail(value);
-
     localStorage.setItem("aircast-email", value);
-
   };
 
-
   const complete = value => {
-
     setProfile(value);
 
     localStorage.setItem(
       "aircast-profile",
       JSON.stringify(value)
     );
-
   };
 
-
   const logout = () => {
-
     localStorage.removeItem("aircast-email");
-
     localStorage.removeItem("aircast-profile");
 
     setEmail("");
-
     setProfile(null);
-
   };
 
-
   return (
-
     <>
-
       <GoldCursor />
 
       <AnimatePresence mode="wait">
@@ -2203,9 +1797,7 @@ export default function App() {
             key="login"
             exit={{ opacity: 0 }}
           >
-
             <Login onLogin={login} />
-
           </motion.div>
 
         ) : !profile ? (
@@ -2214,12 +1806,10 @@ export default function App() {
             key="onboarding"
             exit={{ opacity: 0 }}
           >
-
             <Onboarding
               email={email}
               onComplete={complete}
             />
-
           </motion.div>
 
         ) : (
@@ -2229,20 +1819,15 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-
             <Dashboard
               profile={profile}
               onLogout={logout}
             />
-
           </motion.div>
 
         )}
 
       </AnimatePresence>
-
     </>
-
   );
-
 }
